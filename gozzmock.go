@@ -5,7 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"gozzmock/controller"
-	"gozzmock/handle"
+	"gozzmock/handler"
 	"gozzmock/model"
 	"net/http"
 	"os"
@@ -28,10 +28,10 @@ func main() {
 		controller.AddExpectation(key, exp, nil)
 	}
 
-	http.HandleFunc("/gozzmock/add_expectation", handle.AddExpectation)
-	http.HandleFunc("/gozzmock/remove_expectation", handle.RemoveExpectation)
-	http.HandleFunc("/gozzmock/get_expectations", handle.GetExpectations)
-	http.HandleFunc("/gozzmock/status", handle.Status)
-	http.HandleFunc("/", handle.Default)
+	http.HandleFunc("/gozzmock/add_expectation", handler.AddExpectation)
+	http.HandleFunc("/gozzmock/remove_expectation", handler.RemoveExpectation)
+	http.HandleFunc("/gozzmock/get_expectations", handler.GetExpectations)
+	http.HandleFunc("/gozzmock/status", handler.Status)
+	http.HandleFunc("/", handler.Default)
 	http.ListenAndServe(":8080", nil)
 }

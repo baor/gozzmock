@@ -1,4 +1,4 @@
-package handle
+package handler
 
 import (
 	"bytes"
@@ -32,7 +32,7 @@ func addExpectation(t *testing.T, exp model.Expectation) *bytes.Buffer {
 
 	return httpTestResponseRecorder.Body
 }
-func TestHandleAddAndRemoveExpectation(t *testing.T) {
+func TestHandlerAddAndRemoveExpectation(t *testing.T) {
 	handlerRemoveExpectation := http.HandlerFunc(RemoveExpectation)
 	expectedExp := model.Expectation{Key: "k"}
 	expectedExps := model.Expectations{expectedExp.Key: expectedExp}
@@ -62,7 +62,7 @@ func TestHandleAddAndRemoveExpectation(t *testing.T) {
 	assert.Equal(t, "{}", httpTestResponseRecorder.Body.String())
 }
 
-func TestHandleAddTwoExpectations(t *testing.T) {
+func TestHandlerAddTwoExpectations(t *testing.T) {
 	handlerDefault := http.HandlerFunc(Default)
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("response from test server"))
