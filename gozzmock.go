@@ -4,9 +4,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"gozzmock/controller"
-	"gozzmock/handler"
-	"gozzmock/model"
 	"net/http"
 	"os"
 )
@@ -18,20 +15,20 @@ func main() {
 	fmt.Println("initSetup:", initSetup)
 	fmt.Println("tail:", flag.Args())
 
-	exps := model.Expectations{}
+	exps := Expectations{}
 	err := json.Unmarshal([]byte(initSetup), &exps)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 	for key, exp := range exps {
-		controller.AddExpectation(key, exp, nil)
+		ControllerAddExpectation(key, exp, nil)
 	}
 
-	http.HandleFunc("/gozzmock/add_expectation", handler.AddExpectation)
-	http.HandleFunc("/gozzmock/remove_expectation", handler.RemoveExpectation)
-	http.HandleFunc("/gozzmock/get_expectations", handler.GetExpectations)
-	http.HandleFunc("/gozzmock/status", handler.Status)
-	http.HandleFunc("/", handler.Default)
+	http.HandleFunc("/gozzmock/add_expectation", HandlerAddExpectation)
+	http.HandleFunc("/gozzmock/remove_expectation", HandlerRemoveExpectation)
+	http.HandleFunc("/gozzmock/get_expectations", HandlerGetExpectations)
+	http.HandleFunc("/gozzmock/status", HandlerStatus)
+	http.HandleFunc("/", HandlerDefault)
 	http.ListenAndServe(":8080", nil)
 }
