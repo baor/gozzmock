@@ -1,4 +1,4 @@
-go_import_path: example.org/pkg/foo
+go_import_path: github.com/Travix-International
 
 language: go
 
