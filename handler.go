@@ -1,25 +1,23 @@
-package handler
+package main
 
 import (
 	"encoding/json"
 	"fmt"
-	"gozzmock/controller"
-	"gozzmock/model"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
 )
 
-// AddExpectation handler parses request and adds expectation to global expectations list
-func AddExpectation(w http.ResponseWriter, r *http.Request) {
+// HandlerAddExpectation handler parses request and adds expectation to global expectations list
+func HandlerAddExpectation(w http.ResponseWriter, r *http.Request) {
 	log.Println(r)
 	if r.Method != "POST" {
 		panic(fmt.Sprintf("Wrong method %s", r.Method))
 	}
 	log.Println("Body = " + fmt.Sprint(r.Body))
 
-	exp := model.Expectation{}
+	exp := Expectation{}
 	bodyDecoder := json.NewDecoder(r.Body)
 	err := bodyDecoder.Decode(&exp)
 	if err != nil {
@@ -27,7 +25,7 @@ func AddExpectation(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	var exps = controller.AddExpectation(exp.Key, exp, nil)
+	var exps = ControllerAddExpectation(exp.Key, exp, nil)
 
 	expsjson, err := json.Marshal(exps)
 	if err != nil {
@@ -36,15 +34,15 @@ func AddExpectation(w http.ResponseWriter, r *http.Request) {
 	w.Write(expsjson)
 }
 
-// RemoveExpectation handler parses request and deletes expectation from global expectations list
-func RemoveExpectation(w http.ResponseWriter, r *http.Request) {
+// HandlerRemoveExpectation handler parses request and deletes expectation from global expectations list
+func HandlerRemoveExpectation(w http.ResponseWriter, r *http.Request) {
 	log.Println(r)
 	if r.Method != "POST" {
 		panic(fmt.Sprintf("Wrong method %s", r.Method))
 	}
 	log.Println("Body = " + fmt.Sprint(r.Body))
 
-	requestBody := model.ExpectationRemove{}
+	requestBody := ExpectationRemove{}
 	bodyDecoder := json.NewDecoder(r.Body)
 	err := bodyDecoder.Decode(&requestBody)
 	if err != nil {
@@ -52,7 +50,7 @@ func RemoveExpectation(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	var exps = controller.RemoveExpectation(requestBody.Key, nil)
+	var exps = ControllerRemoveExpectation(requestBody.Key, nil)
 	expsjson, err := json.Marshal(exps)
 	if err != nil {
 		panic(err)
@@ -60,14 +58,14 @@ func RemoveExpectation(w http.ResponseWriter, r *http.Request) {
 	w.Write(expsjson)
 }
 
-// GetExpectations handler parses request and returns global expectations list
-func GetExpectations(w http.ResponseWriter, r *http.Request) {
+// HandlerGetExpectations handler parses request and returns global expectations list
+func HandlerGetExpectations(w http.ResponseWriter, r *http.Request) {
 	log.Println(r)
 	if r.Method != "GET" {
 		panic(fmt.Sprintf("Wrong method %s", r.Method))
 	}
 
-	var exps = controller.GetExpectations(nil)
+	var exps = ControllerGetExpectations(nil)
 	expsjson, err := json.Marshal(exps)
 	if err != nil {
 		panic(err)
@@ -75,20 +73,20 @@ func GetExpectations(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, string(expsjson))
 }
 
-// Status handler returns applications status
-func Status(w http.ResponseWriter, r *http.Request) {
+// HandlerStatus handler returns applications status
+func HandlerStatus(w http.ResponseWriter, r *http.Request) {
 	log.Println(r)
 	fmt.Fprint(w, "gozzmock status is OK")
 }
 
-// Default handler is an entry point for all incoming requests
-func Default(w http.ResponseWriter, r *http.Request) {
+// HandlerDefault handler is an entry point for all incoming requests
+func HandlerDefault(w http.ResponseWriter, r *http.Request) {
 	log.Println(r)
 
-	generateResponseToResponseWriter(&w, controller.TranslateRequestToExpectation(r))
+	generateResponseToResponseWriter(&w, ControllerTranslateRequestToExpectation(r))
 }
 
-func uploadResponseToResponseWriter(w *http.ResponseWriter, resp *model.ExpectationResponse) {
+func uploadResponseToResponseWriter(w *http.ResponseWriter, resp *ExpectationResponse) {
 	(*w).WriteHeader(resp.HTTPCode)
 	(*w).Write([]byte(resp.Body))
 	for name, value := range resp.Headers {
@@ -96,10 +94,10 @@ func uploadResponseToResponseWriter(w *http.ResponseWriter, resp *model.Expectat
 	}
 }
 
-func generateResponseToResponseWriter(w *http.ResponseWriter, req model.ExpectationRequest) {
-	exps := controller.GetExpectations(nil)
-	for _, exp := range controller.SortExpectationsByPriority(exps) {
-		if controller.RequestPassFilter(&req, &exp.Request) {
+func generateResponseToResponseWriter(w *http.ResponseWriter, req ExpectationRequest) {
+	exps := ControllerGetExpectations(nil)
+	for _, exp := range ControllerSortExpectationsByPriority(exps) {
+		if ControllerRequestPassFilter(&req, &exp.Request) {
 			expResponseIsEmpty := (exp.Response.HTTPCode == 0 && exp.Response.Body == "")
 			if !expResponseIsEmpty {
 				uploadResponseToResponseWriter(w, &exp.Response)
@@ -108,7 +106,7 @@ func generateResponseToResponseWriter(w *http.ResponseWriter, req model.Expectat
 			}
 			expForwardIsEmpty := (exp.Forward.Scheme == "" && exp.Forward.Host == "")
 			if !expForwardIsEmpty {
-				httpReq := controller.CreateHTTPRequest(req, exp.Forward)
+				httpReq := ControllerCreateHTTPRequest(req, exp.Forward)
 				doHTTPRequest(w, httpReq)
 				time.Sleep(time.Second * exp.Delay)
 				return
@@ -135,7 +133,7 @@ func doHTTPRequest(w *http.ResponseWriter, httpReq *http.Request) {
 
 	(*w).WriteHeader(resp.StatusCode)
 	(*w).Write(body)
-	headers := controller.TranslateHTTPHeadersToExpHeaders(resp.Header)
+	headers := ControllerTranslateHTTPHeadersToExpHeaders(resp.Header)
 	for name, value := range headers {
 		(*w).Header().Set(name, value)
 	}

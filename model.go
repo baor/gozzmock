@@ -1,11 +1,13 @@
-package model
+package main
 
 import (
 	"time"
 )
 
+// Headers are HTTP headers
 type Headers map[string]string
 
+// ExpectationRequest is filter for incoming requests
 type ExpectationRequest struct {
 	Method  string  `json:"method"`
 	Path    string  `json:"path"`
@@ -13,18 +15,21 @@ type ExpectationRequest struct {
 	Headers Headers `json:"headers"`
 }
 
+// ExpectationForward is forward action if request passes filter
 type ExpectationForward struct {
 	Scheme  string  `json:"scheme"`
 	Host    string  `json:"host"`
 	Headers Headers `json:"headers"`
 }
 
+// ExpectationResponse is response action if request passes filter
 type ExpectationResponse struct {
 	HTTPCode int     `json:"httpcode"`
 	Body     string  `json:"body"`
 	Headers  Headers `json:"headers"`
 }
 
+// Expectation is single set of rules: expected request and prepared action
 type Expectation struct {
 	Key      string              `json:"key"`
 	Request  ExpectationRequest  `json:"request"`
@@ -34,10 +39,12 @@ type Expectation struct {
 	Priority int                 `json:"priority"`
 }
 
+// ExpectationRemove removes action from list by key
 type ExpectationRemove struct {
 	Key string `json:"key"`
 }
 
+// Expectations is a map for expectations
 type Expectations map[string]Expectation
 
 // ExpectationsInt is for sorting expectations by priority. the lowest priority is 0

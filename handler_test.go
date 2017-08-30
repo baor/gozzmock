@@ -1,9 +1,8 @@
-package handler
+package main
 
 import (
 	"bytes"
 	"encoding/json"
-	"gozzmock/model"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -14,8 +13,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func addExpectation(t *testing.T, exp model.Expectation) *bytes.Buffer {
-	handlerAddExpectation := http.HandlerFunc(AddExpectation)
+func addExpectation(t *testing.T, exp Expectation) *bytes.Buffer {
+	handlerAddExpectation := http.HandlerFunc(HandlerAddExpectation)
 
 	expJSON, err := json.Marshal(exp)
 	if err != nil {
@@ -33,9 +32,9 @@ func addExpectation(t *testing.T, exp model.Expectation) *bytes.Buffer {
 	return httpTestResponseRecorder.Body
 }
 func TestHandlerAddAndRemoveExpectation(t *testing.T) {
-	handlerRemoveExpectation := http.HandlerFunc(RemoveExpectation)
-	expectedExp := model.Expectation{Key: "k"}
-	expectedExps := model.Expectations{expectedExp.Key: expectedExp}
+	handlerRemoveExpectation := http.HandlerFunc(HandlerRemoveExpectation)
+	expectedExp := Expectation{Key: "k"}
+	expectedExps := Expectations{expectedExp.Key: expectedExp}
 
 	body := addExpectation(t, expectedExp)
 	expsjson, err := json.Marshal(expectedExps)
@@ -45,7 +44,7 @@ func TestHandlerAddAndRemoveExpectation(t *testing.T) {
 	assert.Equal(t, string(expsjson), body.String())
 
 	// remove expectation
-	expRemoveJSON, err := json.Marshal(model.ExpectationRemove{Key: expectedExp.Key})
+	expRemoveJSON, err := json.Marshal(ExpectationRemove{Key: expectedExp.Key})
 	log.Println(string(expRemoveJSON))
 	if err != nil {
 		panic(err)
@@ -63,7 +62,7 @@ func TestHandlerAddAndRemoveExpectation(t *testing.T) {
 }
 
 func TestHandlerAddTwoExpectations(t *testing.T) {
-	handlerDefault := http.HandlerFunc(Default)
+	handlerDefault := http.HandlerFunc(HandlerDefault)
 	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("response from test server"))
 	}))
@@ -73,15 +72,15 @@ func TestHandlerAddTwoExpectations(t *testing.T) {
 		panic(err)
 	}
 
-	addExpectation(t, model.Expectation{
+	addExpectation(t, Expectation{
 		Key:      "response",
-		Request:  model.ExpectationRequest{Path: "/response"},
-		Response: model.ExpectationResponse{HTTPCode: http.StatusOK, Body: "response body"},
+		Request:  ExpectationRequest{Path: "/response"},
+		Response: ExpectationResponse{HTTPCode: http.StatusOK, Body: "response body"},
 		Priority: 1})
 
-	addExpectation(t, model.Expectation{
+	addExpectation(t, Expectation{
 		Key:      "forward",
-		Forward:  model.ExpectationForward{Scheme: testServerURL.Scheme, Host: testServerURL.Host},
+		Forward:  ExpectationForward{Scheme: testServerURL.Scheme, Host: testServerURL.Host},
 		Priority: 0})
 
 	// do request for response
