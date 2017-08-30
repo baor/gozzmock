@@ -1,5 +1,7 @@
+go_import_path: example.org/pkg/foo
+
 language: go
-go_import_path: github.com/Travix-International
+
 go:
   - 1.8.3
 
