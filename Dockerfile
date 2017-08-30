@@ -1,24 +1,24 @@
+# Build stage
+FROM golang:1.8.3 as builder
+
 MAINTAINER Travix
 
-# Build stage
-FROM golang:1.8 as builder
-
-COPY ../gozzmock /go/src/
+COPY ./ /go/src/gozzmock
 
 WORKDIR /go/src/gozzmock
 
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o gozzmock .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o gozzmock_bin .
 
 # Run stage
 FROM alpine:3.6
 
 WORKDIR /root/
 
-COPY --from=builder /go/src/gozzmock .
+COPY --from=builder /go/src/gozzmock/gozzmock_bin .
 
 EXPOSE 8080
 
-CMD ["./gozzmock"]
+CMD ["./gozzmock_bin"]
 
 #FROM scratch
 #ADD ca-certificates.crt /etc/ssl/certs/
