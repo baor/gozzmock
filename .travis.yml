@@ -3,7 +3,7 @@ language: go
 go:
   - 1.8.3
 
-install:
+before_script:
   - go get golang.org/x/tools/cmd/cover
   - go get github.com/mattn/goveralls
 
