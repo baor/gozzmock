@@ -15,13 +15,7 @@ func HandlerAddExpectation(w http.ResponseWriter, r *http.Request) {
 		panic(fmt.Sprintf("Wrong method %s", r.Method))
 	}
 
-	exp := Expectation{}
-	bodyDecoder := json.NewDecoder(r.Body)
-	err := bodyDecoder.Decode(&exp)
-	if err != nil {
-		panic(err)
-	}
-	defer r.Body.Close()
+	exp := ExpectationFromReadCloser(r.Body)
 
 	var exps = ControllerAddExpectation(exp.Key, exp, nil)
 

@@ -1,6 +1,9 @@
 package main
 
 import (
+	"encoding/json"
+	"io"
+	"strings"
 	"time"
 )
 
@@ -53,3 +56,26 @@ type ExpectationsInt map[int]Expectation
 func (exps ExpectationsInt) Len() int           { return len(exps) }
 func (exps ExpectationsInt) Swap(i, j int)      { exps[i], exps[j] = exps[j], exps[i] }
 func (exps ExpectationsInt) Less(i, j int) bool { return exps[i].Priority > exps[j].Priority }
+
+// ExpectationFromReadCloser decodes readCloser to expectaion
+func ExpectationFromReadCloser(readCloser io.ReadCloser) Expectation {
+	exp := Expectation{}
+	bodyDecoder := json.NewDecoder(readCloser)
+	defer readCloser.Close()
+	err := bodyDecoder.Decode(&exp)
+	if err != nil {
+		panic(err)
+	}
+	return exp
+}
+
+// ExpectationsFromString decodes string to expectaions
+func ExpectationsFromString(str string) Expectations {
+	exps := Expectations{}
+	bodyDecoder := json.NewDecoder(strings.NewReader(str))
+	err := bodyDecoder.Decode(&exps)
+	if err != nil {
+		panic(err)
+	}
+	return exps
+}

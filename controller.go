@@ -115,11 +115,11 @@ func ControllerRequestPassFilter(req *ExpectationRequest, filter *ExpectationReq
 		for fhName, fhValue := range filter.Headers {
 			value, ok := req.Headers[fhName]
 			if !ok {
-				log.Printf("header %s isn't present in the request headers %v", fhName, req.Headers)
+				log.Printf("No header %s in the request headers %v", fhName, req.Headers)
 				return false
 			}
 			if !ControllerStringPassesFilter(value, fhValue) {
-				log.Printf("header %s:%s doesnt' pass filter for value %s", fhName, value, fhValue)
+				log.Printf("header %s:%s blocked by filter. Expected header value %s", fhName, value, fhValue)
 				return false
 			}
 		}

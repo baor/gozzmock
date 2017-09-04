@@ -1,13 +1,11 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
 	"net/http"
 	"net/http/httputil"
-	"os"
 )
 
 func httpHandleFuncWithLogs(pattern string, handler func(http.ResponseWriter, *http.Request)) {
@@ -17,7 +15,7 @@ func httpHandleFuncWithLogs(pattern string, handler func(http.ResponseWriter, *h
 			http.Error(w, fmt.Sprint(err), http.StatusInternalServerError)
 			return
 		}
-		log.Println(fmt.Sprintf("%q", req))
+		log.Println(fmt.Sprintf("%v", req))
 
 		handler(w, r)
 	}
@@ -32,12 +30,8 @@ func main() {
 	fmt.Println("initSetup:", initSetup)
 	fmt.Println("tail:", flag.Args())
 
-	exps := Expectations{}
-	err := json.Unmarshal([]byte(initSetup), &exps)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	exps := ExpectationsFromString(initSetup)
+
 	for key, exp := range exps {
 		ControllerAddExpectation(key, exp, nil)
 	}
