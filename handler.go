@@ -75,7 +75,6 @@ func HandlerGetExpectations(w http.ResponseWriter, r *http.Request) {
 
 // HandlerStatus handler returns applications status
 func HandlerStatus(w http.ResponseWriter, r *http.Request) {
-	log.Println(r)
 	fmt.Fprint(w, "gozzmock status is OK")
 }
 
