@@ -11,11 +11,9 @@ import (
 
 // HandlerAddExpectation handler parses request and adds expectation to global expectations list
 func HandlerAddExpectation(w http.ResponseWriter, r *http.Request) {
-	log.Println(r)
 	if r.Method != "POST" {
 		panic(fmt.Sprintf("Wrong method %s", r.Method))
 	}
-	log.Println("Body = " + fmt.Sprint(r.Body))
 
 	exp := Expectation{}
 	bodyDecoder := json.NewDecoder(r.Body)
@@ -36,11 +34,9 @@ func HandlerAddExpectation(w http.ResponseWriter, r *http.Request) {
 
 // HandlerRemoveExpectation handler parses request and deletes expectation from global expectations list
 func HandlerRemoveExpectation(w http.ResponseWriter, r *http.Request) {
-	log.Println(r)
 	if r.Method != "POST" {
 		panic(fmt.Sprintf("Wrong method %s", r.Method))
 	}
-	log.Println("Body = " + fmt.Sprint(r.Body))
 
 	requestBody := ExpectationRemove{}
 	bodyDecoder := json.NewDecoder(r.Body)
@@ -60,7 +56,6 @@ func HandlerRemoveExpectation(w http.ResponseWriter, r *http.Request) {
 
 // HandlerGetExpectations handler parses request and returns global expectations list
 func HandlerGetExpectations(w http.ResponseWriter, r *http.Request) {
-	log.Println(r)
 	if r.Method != "GET" {
 		panic(fmt.Sprintf("Wrong method %s", r.Method))
 	}
