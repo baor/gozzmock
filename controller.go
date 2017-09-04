@@ -71,9 +71,11 @@ func ControllerTranslateRequestToExpectation(r *http.Request) ExpectationRequest
 	expRequest.Path = r.URL.Path
 
 	// Buffer the body
-	bodyBuffer, error := ioutil.ReadAll(r.Body)
-	if error == nil {
-		expRequest.Body = string(bodyBuffer)
+	if r.Body != nil {
+		bodyBuffer, error := ioutil.ReadAll(r.Body)
+		if error == nil {
+			expRequest.Body = string(bodyBuffer)
+		}
 	}
 
 	if len(r.Header) > 0 {

@@ -107,3 +107,37 @@ func TestHandlerAddTwoExpectations(t *testing.T) {
 
 	assert.Equal(t, "response from test server", httpTestResponseRecorder2.Body.String())
 }
+
+func TestHandlerGetExpectations(t *testing.T) {
+	handlerGetExpectations := http.HandlerFunc(HandlerGetExpectations)
+	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("response from test server"))
+	}))
+	defer testServer.Close()
+
+	expectation := Expectation{
+		Key:      "response",
+		Request:  ExpectationRequest{Path: "/response"},
+		Response: ExpectationResponse{HTTPCode: http.StatusOK, Body: "response body"},
+		Priority: 1}
+	addExpectation(t, expectation)
+
+	// do request for response
+	req, err := http.NewRequest("GET", "/gozzmock/get_expectations", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	httpTestResponseRecorder := httptest.NewRecorder()
+	handlerGetExpectations.ServeHTTP(httpTestResponseRecorder, req)
+	assert.Equal(t, http.StatusOK, httpTestResponseRecorder.Code)
+
+	expectedResponse, err := json.Marshal(expectation)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	strExpected := string(expectedResponse)
+	strActual := httpTestResponseRecorder.Body.String()
+	assert.Contains(t, strActual, strExpected)
+}
