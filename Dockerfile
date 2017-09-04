@@ -12,7 +12,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o gozzmock_bin .
 # Run stage
 FROM scratch
 
-COPY ca-certificates.crt /etc/ssl/certs/
+#COPY ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /go/src/gozzmock/gozzmock_bin .
 
 EXPOSE 8080
