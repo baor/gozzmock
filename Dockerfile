@@ -18,4 +18,4 @@ COPY --from=builder /go/src/gozzmock/entrypoint.sh .
 
 EXPOSE 8080
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["./entrypoint.sh"]
