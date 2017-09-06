@@ -157,9 +157,7 @@ func TestHandlerGetExpectations(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	strExpected := string(expectedResponse)
-	strActual := httpTestResponseRecorder.Body.String()
-	assert.Contains(t, strExpected, strActual)
+	assert.Contains(t, httpTestResponseRecorder.Body.String(), string(expectedResponse))
 }
 
 func TestHandlerStatus(t *testing.T) {

@@ -24,13 +24,13 @@ func httpHandleFuncWithLogs(pattern string, handler func(http.ResponseWriter, *h
 }
 
 func main() {
-	var initExps string
-	flag.StringVar(&initExps, "expectations", "[]", "set initial exp")
+	var initExpectations string
+	flag.StringVar(&initExpectations, "expectations", "[]", "set initial expectations")
 	flag.Parse()
-	fmt.Println("initExps:", initExps)
+	fmt.Println("initial expectations:", initExpectations)
 	fmt.Println("tail:", flag.Args())
 
-	exps := ExpectationsFromString(initExps)
+	exps := ExpectationsFromString(initExpectations)
 
 	for _, exp := range exps {
 		ControllerAddExpectation(exp.Key, exp, nil)
