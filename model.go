@@ -12,34 +12,34 @@ type Headers map[string]string
 
 // ExpectationRequest is filter for incoming requests
 type ExpectationRequest struct {
-	Method  string  `json:"method"`
-	Path    string  `json:"path"`
-	Body    string  `json:"body"`
-	Headers Headers `json:"headers"`
+	Method  string   `json:"method"`
+	Path    string   `json:"path"`
+	Body    string   `json:"body"`
+	Headers *Headers `json:"headers,omitempty"`
 }
 
 // ExpectationForward is forward action if request passes filter
 type ExpectationForward struct {
-	Scheme  string  `json:"scheme"`
-	Host    string  `json:"host"`
-	Headers Headers `json:"headers"`
+	Scheme  string   `json:"scheme"`
+	Host    string   `json:"host"`
+	Headers *Headers `json:"headers,omitempty"`
 }
 
 // ExpectationResponse is response action if request passes filter
 type ExpectationResponse struct {
-	HTTPCode int     `json:"httpcode"`
-	Body     string  `json:"body"`
-	Headers  Headers `json:"headers"`
+	HTTPCode int      `json:"httpcode"`
+	Body     string   `json:"body"`
+	Headers  *Headers `json:"headers,omitempty"`
 }
 
 // Expectation is single set of rules: expected request and prepared action
 type Expectation struct {
-	Key      string              `json:"key"`
-	Request  ExpectationRequest  `json:"request"`
-	Forward  ExpectationForward  `json:"forward"`
-	Response ExpectationResponse `json:"response"`
-	Delay    time.Duration       `json:"delay"`
-	Priority int                 `json:"priority"`
+	Key      string               `json:"key"`
+	Request  *ExpectationRequest  `json:"request,omitempty"`
+	Forward  *ExpectationForward  `json:"forward,omitempty"`
+	Response *ExpectationResponse `json:"response,omitempty"`
+	Delay    time.Duration        `json:"delay,omitempty"`
+	Priority int                  `json:"priority,omitempty"`
 }
 
 // ExpectationRemove removes action from list by key
@@ -66,6 +66,7 @@ func ExpectationFromReadCloser(readCloser io.ReadCloser) Expectation {
 	if err != nil {
 		panic(err)
 	}
+	expectationSetDefaultValues(&exp)
 	return exp
 }
 
@@ -77,5 +78,15 @@ func ExpectationsFromString(str string) []Expectation {
 	if err != nil {
 		panic(err)
 	}
+	for _, exp := range exps {
+		expectationSetDefaultValues(&exp)
+	}
 	return exps
+}
+
+// expectationSetDefaultValues sets default values after deserialization
+func expectationSetDefaultValues(exp *Expectation) {
+	if exp.Forward != nil && exp.Forward.Scheme == "" {
+		exp.Forward.Scheme = "http"
+	}
 }

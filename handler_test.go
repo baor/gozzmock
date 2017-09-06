@@ -31,6 +31,26 @@ func addExpectation(t *testing.T, exp Expectation) *bytes.Buffer {
 
 	return httpTestResponseRecorder.Body
 }
+
+func TestHandlerNoExpectations(t *testing.T) {
+	handlerDefault := http.HandlerFunc(HandlerDefault)
+	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("response from test server"))
+	}))
+	defer testServer.Close()
+
+	// do request for response
+	req, err := http.NewRequest("GET", "/request", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	httpTestResponseRecorder := httptest.NewRecorder()
+	handlerDefault.ServeHTTP(httpTestResponseRecorder, req)
+	assert.Equal(t, http.StatusNotImplemented, httpTestResponseRecorder.Code)
+	assert.Equal(t, "No expectations in gozzmock for request!", httpTestResponseRecorder.Body.String())
+}
+
 func TestHandlerAddAndRemoveExpectation(t *testing.T) {
 	handlerRemoveExpectation := http.HandlerFunc(HandlerRemoveExpectation)
 	expectedExp := Expectation{Key: "k"}
@@ -74,13 +94,13 @@ func TestHandlerAddTwoExpectations(t *testing.T) {
 
 	addExpectation(t, Expectation{
 		Key:      "response",
-		Request:  ExpectationRequest{Path: "/response"},
-		Response: ExpectationResponse{HTTPCode: http.StatusOK, Body: "response body"},
+		Request:  &ExpectationRequest{Path: "/response"},
+		Response: &ExpectationResponse{HTTPCode: http.StatusOK, Body: "response body"},
 		Priority: 1})
 
 	addExpectation(t, Expectation{
 		Key:      "forward",
-		Forward:  ExpectationForward{Scheme: testServerURL.Scheme, Host: testServerURL.Host},
+		Forward:  &ExpectationForward{Scheme: testServerURL.Scheme, Host: testServerURL.Host},
 		Priority: 0})
 
 	// do request for response
@@ -117,8 +137,8 @@ func TestHandlerGetExpectations(t *testing.T) {
 
 	expectation := Expectation{
 		Key:      "response",
-		Request:  ExpectationRequest{Path: "/response"},
-		Response: ExpectationResponse{HTTPCode: http.StatusOK, Body: "response body"},
+		Request:  &ExpectationRequest{Path: "/response"},
+		Response: &ExpectationResponse{HTTPCode: http.StatusOK, Body: "response body"},
 		Priority: 1}
 	addExpectation(t, expectation)
 

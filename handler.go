@@ -77,23 +77,24 @@ func HandlerDefault(w http.ResponseWriter, r *http.Request) {
 func uploadResponseToResponseWriter(w *http.ResponseWriter, resp *ExpectationResponse) {
 	(*w).WriteHeader(resp.HTTPCode)
 	(*w).Write([]byte(resp.Body))
-	for name, value := range resp.Headers {
-		(*w).Header().Set(name, value)
+	if resp.Headers != nil {
+		for name, value := range *resp.Headers {
+			(*w).Header().Set(name, value)
+		}
 	}
 }
 
 func generateResponseToResponseWriter(w *http.ResponseWriter, req ExpectationRequest) {
 	exps := ControllerGetExpectations(nil)
 	for _, exp := range ControllerSortExpectationsByPriority(exps) {
-		if ControllerRequestPassFilter(&req, &exp.Request) {
-			expResponseIsEmpty := (exp.Response.HTTPCode == 0 && exp.Response.Body == "")
-			if !expResponseIsEmpty {
-				uploadResponseToResponseWriter(w, &exp.Response)
+		if ControllerRequestPassFilter(&req, exp.Request) {
+			if exp.Response != nil {
+				uploadResponseToResponseWriter(w, exp.Response)
 				time.Sleep(time.Second * exp.Delay)
 				return
 			}
-			expForwardIsEmpty := (exp.Forward.Scheme == "" && exp.Forward.Host == "")
-			if !expForwardIsEmpty {
+
+			if exp.Forward != nil {
 				httpReq := ControllerCreateHTTPRequest(req, exp.Forward)
 				doHTTPRequest(w, httpReq)
 				time.Sleep(time.Second * exp.Delay)
@@ -121,7 +122,7 @@ func doHTTPRequest(w *http.ResponseWriter, httpReq *http.Request) {
 
 	(*w).WriteHeader(resp.StatusCode)
 	(*w).Write(body)
-	headers := ControllerTranslateHTTPHeadersToExpHeaders(resp.Header)
+	headers := *ControllerTranslateHTTPHeadersToExpHeaders(resp.Header)
 	for name, value := range headers {
 		(*w).Header().Set(name, value)
 	}

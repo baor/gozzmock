@@ -82,8 +82,9 @@ func TestControllerTranslateRequestToExpectation_SimpleRequest_AllFieldsTranslat
 	assert.Equal(t, "POST", exp.Method)
 	assert.Equal(t, "/path", exp.Path)
 	assert.Equal(t, "body text", exp.Body)
-	assert.Equal(t, 1, len(exp.Headers))
-	assert.Equal(t, "hv1", exp.Headers["h1"])
+	assert.NotNil(t, exp.Headers)
+	assert.Equal(t, 1, len(*exp.Headers))
+	assert.Equal(t, "hv1", (*exp.Headers)["h1"])
 }
 
 func TestControllerTranslateHTTPHeadersToExpHeaders_TwoHeaders_HeadersTranslated(t *testing.T) {
@@ -92,9 +93,9 @@ func TestControllerTranslateHTTPHeadersToExpHeaders_TwoHeaders_HeadersTranslated
 	header.Add("h1", "hv2")
 
 	expHeaders := ControllerTranslateHTTPHeadersToExpHeaders(header)
-
-	assert.Equal(t, 1, len(expHeaders))
-	assert.Equal(t, "hv1,hv2", expHeaders["h1"])
+	assert.NotNil(t, expHeaders)
+	assert.Equal(t, 1, len(*expHeaders))
+	assert.Equal(t, "hv1,hv2", (*expHeaders)["h1"])
 }
 
 func TestControllerStringPassesFilter_EmptyFilter_True(t *testing.T) {
@@ -143,32 +144,32 @@ func TestControllerRequestPassFilter_MethodsNotEqAndPathsAreEq_False(t *testing.
 
 func TestControllerRequestPassFilter_HeadersAreEq_True(t *testing.T) {
 	assert.True(t, ControllerRequestPassFilter(
-		&ExpectationRequest{Headers: Headers{"h1": "hv1"}},
-		&ExpectationRequest{Headers: Headers{"h1": "hv1"}}))
+		&ExpectationRequest{Headers: &Headers{"h1": "hv1"}},
+		&ExpectationRequest{Headers: &Headers{"h1": "hv1"}}))
 }
 
 func TestControllerRequestPassFilter_HeaderNotEq_False(t *testing.T) {
 	result := ControllerRequestPassFilter(
-		&ExpectationRequest{Headers: Headers{"h1": "hv1"}},
-		&ExpectationRequest{Headers: Headers{"h2": "hv2"}})
+		&ExpectationRequest{Headers: &Headers{"h1": "hv1"}},
+		&ExpectationRequest{Headers: &Headers{"h2": "hv2"}})
 	assert.False(t, result)
 }
 
 func TestControllerRequestPassFilter_HeaderValueNotEq_False(t *testing.T) {
 	assert.False(t, ControllerRequestPassFilter(
-		&ExpectationRequest{Headers: Headers{"h1": "hv1"}},
-		&ExpectationRequest{Headers: Headers{"h1": "hv2"}}))
+		&ExpectationRequest{Headers: &Headers{"h1": "hv1"}},
+		&ExpectationRequest{Headers: &Headers{"h1": "hv2"}}))
 }
 
 func TestControllerRequestPassFilter_NoHeaderinReq_False(t *testing.T) {
 	assert.False(t, ControllerRequestPassFilter(
 		&ExpectationRequest{},
-		&ExpectationRequest{Headers: Headers{"h2": "hv2"}}))
+		&ExpectationRequest{Headers: &Headers{"h2": "hv2"}}))
 }
 
 func TestControllerRequestPassFilter_NoHeaderInFilter_True(t *testing.T) {
 	assert.True(t, ControllerRequestPassFilter(
-		&ExpectationRequest{Headers: Headers{"h1": "hv1"}},
+		&ExpectationRequest{Headers: &Headers{"h1": "hv1"}},
 		&ExpectationRequest{}))
 }
 

@@ -55,13 +55,13 @@ func ControllerRemoveExpectation(key string, expsInjection Expectations) Expecta
 }
 
 // ControllerTranslateHTTPHeadersToExpHeaders translates http headers into custom headers map
-func ControllerTranslateHTTPHeadersToExpHeaders(httpHeader http.Header) Headers {
+func ControllerTranslateHTTPHeadersToExpHeaders(httpHeader http.Header) *Headers {
 	headers := Headers{}
 	for name, headerLine := range httpHeader {
 		name = strings.ToLower(name)
 		headers[name] = strings.Join(headerLine, ",")
 	}
-	return headers
+	return &headers
 }
 
 // ControllerTranslateRequestToExpectation Translates http request to expectation request
@@ -94,8 +94,12 @@ func ControllerStringPassesFilter(str string, filter string) bool {
 	return r.Match([]byte(str))
 }
 
-// ControllerRequestPassFilter validates whether the incoming request passesparticular filter
+// ControllerRequestPassFilter validates whether the incoming request passes particular filter
 func ControllerRequestPassFilter(req *ExpectationRequest, filter *ExpectationRequest) bool {
+	if filter == nil {
+		return true
+	}
+
 	if len(filter.Method) > 0 && filter.Method != req.Method {
 		log.Printf("method %s should be %s", req.Method, filter.Method)
 		return false
@@ -111,9 +115,13 @@ func ControllerRequestPassFilter(req *ExpectationRequest, filter *ExpectationReq
 		return false
 	}
 
-	if len(filter.Headers) > 0 {
-		for fhName, fhValue := range filter.Headers {
-			value, ok := req.Headers[fhName]
+	if filter.Headers != nil {
+		if req.Headers == nil {
+			log.Printf("Request is expected to contain headers")
+			return false
+		}
+		for fhName, fhValue := range *filter.Headers {
+			value, ok := (*req.Headers)[fhName]
 			if !ok {
 				log.Printf("No header %s in the request headers %v", fhName, req.Headers)
 				return false
@@ -142,7 +150,7 @@ func ControllerSortExpectationsByPriority(exps Expectations) ExpectationsInt {
 }
 
 // ControllerCreateHTTPRequest creates an http request based on incoming request and forward rules
-func ControllerCreateHTTPRequest(req ExpectationRequest, fwd ExpectationForward) *http.Request {
+func ControllerCreateHTTPRequest(req ExpectationRequest, fwd *ExpectationForward) *http.Request {
 	fwdURL, err := url.Parse(fmt.Sprintf("%s://%s%s", fwd.Scheme, fwd.Host, req.Path))
 	if err != nil {
 		panic(err)
@@ -153,12 +161,16 @@ func ControllerCreateHTTPRequest(req ExpectationRequest, fwd ExpectationForward)
 		panic(err)
 	}
 
-	for name, value := range req.Headers {
-		httpReq.Header.Set(name, value)
+	if req.Headers != nil {
+		for name, value := range *req.Headers {
+			httpReq.Header.Set(name, value)
+		}
 	}
 
-	for name, value := range fwd.Headers {
-		httpReq.Header.Set(name, value)
+	if fwd.Headers != nil {
+		for name, value := range *fwd.Headers {
+			httpReq.Header.Set(name, value)
+		}
 	}
 
 	return httpReq
