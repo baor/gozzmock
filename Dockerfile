@@ -14,6 +14,7 @@ FROM scratch
 
 #COPY ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /go/src/gozzmock/gozzmock_bin .
+COPY --from=builder /go/src/gozzmock/entrypoint.sh .
 
 EXPOSE 8080
 
