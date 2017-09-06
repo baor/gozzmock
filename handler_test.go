@@ -159,5 +159,24 @@ func TestHandlerGetExpectations(t *testing.T) {
 
 	strExpected := string(expectedResponse)
 	strActual := httpTestResponseRecorder.Body.String()
-	assert.Contains(t, strActual, strExpected)
+	assert.Contains(t, strExpected, strActual)
+}
+
+func TestHandlerStatus(t *testing.T) {
+	handlerStatus := http.HandlerFunc(HandlerStatus)
+	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("response from test server"))
+	}))
+	defer testServer.Close()
+
+	// do request for response
+	req, err := http.NewRequest("GET", "/gozzmock/status", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	httpTestResponseRecorder := httptest.NewRecorder()
+	handlerStatus.ServeHTTP(httpTestResponseRecorder, req)
+	assert.Equal(t, http.StatusOK, httpTestResponseRecorder.Code)
+	assert.Contains(t, "gozzmock status is OK", httpTestResponseRecorder.Body.String())
 }

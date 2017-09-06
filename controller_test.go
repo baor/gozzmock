@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 	"testing"
@@ -196,4 +197,16 @@ func TestControllerSortExpectationsByPriority_ListOfExpectations_OK(t *testing.T
 	assert.Equal(t, "k2", sortedMap[0].Key)
 	assert.Equal(t, "k1", sortedMap[1].Key)
 	assert.Equal(t, "k0", sortedMap[2].Key)
+}
+
+func TestControllerControllerCreateHTTPRequestWithHeaders(t *testing.T) {
+	expReq := ExpectationRequest{Method: "GET", Path: "/request", Headers: &Headers{"h_req": "hv_req"}}
+	expFwd := ExpectationForward{Scheme: "https", Host: "localhost_fwd", Headers: &Headers{"h_req": "hv_fwd", "h_fwd": "hv_fwd"}}
+	httpReq := ControllerCreateHTTPRequest(expReq, &expFwd)
+	assert.NotNil(t, httpReq)
+	assert.Equal(t, expReq.Method, httpReq.Method)
+	assert.Equal(t, expFwd.Host, httpReq.Host)
+	assert.Equal(t, fmt.Sprintf("%s://%s%s", expFwd.Scheme, expFwd.Host, expReq.Path), httpReq.URL.String())
+	assert.Equal(t, "hv_fwd", httpReq.Header.Get("h_req"))
+	assert.Equal(t, "hv_fwd", httpReq.Header.Get("h_fwd"))
 }
