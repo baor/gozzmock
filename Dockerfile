@@ -17,4 +17,4 @@ COPY --from=builder /go/src/gozzmock/gozzmock_bin .
 
 EXPOSE 8080
 
-CMD ["./gozzmock_bin"]
+ENTRYPOINT ["/entrypoint.sh"]
