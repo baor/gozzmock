@@ -32,8 +32,8 @@ func main() {
 
 	exps := ExpectationsFromString(initSetup)
 
-	for key, exp := range exps {
-		ControllerAddExpectation(key, exp, nil)
+	for _, exp := range exps {
+		ControllerAddExpectation(exp.Key, exp, nil)
 	}
 
 	http.HandleFunc("/gozzmock/status", HandlerStatus)

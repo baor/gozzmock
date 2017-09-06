@@ -9,9 +9,11 @@ import (
 )
 
 func TestExpectationsFromString(t *testing.T) {
-	str := "{\"k\":{\"key\": \"k\"}}"
+	str := "[{\"key\": \"k1\"},{\"key\": \"k2\"}]"
 	exps := ExpectationsFromString(str)
-	assert.Equal(t, "k", exps["k"].Key)
+	assert.Equal(t, 2, len(exps))
+	assert.Equal(t, "k1", exps[0].Key)
+	assert.Equal(t, "k2", exps[1].Key)
 }
 
 func TestConvertationExpectationFromReadCloser(t *testing.T) {
