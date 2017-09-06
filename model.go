@@ -73,6 +73,7 @@ func ExpectationFromReadCloser(readCloser io.ReadCloser) Expectation {
 // ExpectationsFromString decodes string to expectaions
 func ExpectationsFromString(str string) []Expectation {
 	exps := make([]Expectation, 0)
+
 	bodyDecoder := json.NewDecoder(strings.NewReader(str))
 	err := bodyDecoder.Decode(&exps)
 	if err != nil {
