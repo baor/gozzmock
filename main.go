@@ -15,7 +15,7 @@ func httpHandleFuncWithLogs(pattern string, handler func(http.ResponseWriter, *h
 			http.Error(w, fmt.Sprint(err), http.StatusInternalServerError)
 			return
 		}
-		log.Println(fmt.Sprintf("%v", req))
+		log.Println(string(req))
 
 		handler(w, r)
 	}
