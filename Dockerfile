@@ -14,7 +14,7 @@ FROM scratch
 
 MAINTAINER Travix
 
-#COPY ca-certificates.crt /etc/ssl/certs/
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /go/src/gozzmock/gozzmock_bin .
 
 EXPOSE 8080
