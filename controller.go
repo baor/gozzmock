@@ -58,7 +58,6 @@ func ControllerRemoveExpectation(key string, expsInjection Expectations) Expecta
 func ControllerTranslateHTTPHeadersToExpHeaders(httpHeader http.Header) *Headers {
 	headers := Headers{}
 	for name, headerLine := range httpHeader {
-		name = strings.ToLower(name)
 		headers[name] = strings.Join(headerLine, ",")
 	}
 	return &headers

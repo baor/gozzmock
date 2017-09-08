@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.8.3 as builder
+FROM golang:1.9 as builder
 
 MAINTAINER Travix
 

@@ -85,7 +85,7 @@ func TestControllerTranslateRequestToExpectation_SimpleRequest_AllFieldsTranslat
 	assert.Equal(t, "body text", exp.Body)
 	assert.NotNil(t, exp.Headers)
 	assert.Equal(t, 1, len(*exp.Headers))
-	assert.Equal(t, "hv1", (*exp.Headers)["h1"])
+	assert.Equal(t, "hv1", (*exp.Headers)["H1"])
 }
 
 func TestControllerTranslateHTTPHeadersToExpHeaders_TwoHeaders_HeadersTranslated(t *testing.T) {
@@ -96,7 +96,7 @@ func TestControllerTranslateHTTPHeadersToExpHeaders_TwoHeaders_HeadersTranslated
 	expHeaders := ControllerTranslateHTTPHeadersToExpHeaders(header)
 	assert.NotNil(t, expHeaders)
 	assert.Equal(t, 1, len(*expHeaders))
-	assert.Equal(t, "hv1,hv2", (*expHeaders)["h1"])
+	assert.Equal(t, "hv1,hv2", (*expHeaders)["H1"])
 }
 
 func TestControllerStringPassesFilter_EmptyFilter_True(t *testing.T) {
