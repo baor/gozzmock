@@ -70,7 +70,7 @@ func ExpectationFromReadCloser(readCloser io.ReadCloser) Expectation {
 	return exp
 }
 
-// ExpectationsFromString decodes string to expectaions
+// ExpectationsFromString decodes string with array of expectations to array of expectaion objects
 func ExpectationsFromString(str string) []Expectation {
 	exps := make([]Expectation, 0)
 
