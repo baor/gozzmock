@@ -15,7 +15,7 @@ func httpHandleFuncWithLogs(pattern string, handler func(http.ResponseWriter, *h
 			http.Error(w, fmt.Sprint(err), http.StatusInternalServerError)
 			return
 		}
-		log.Println("Main. Request: " + string(req))
+		log.Printf("%+v\n", req)
 
 		handler(w, r)
 	}
@@ -24,6 +24,10 @@ func httpHandleFuncWithLogs(pattern string, handler func(http.ResponseWriter, *h
 }
 
 func main() {
+
+	//log file name and line
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
 	var initExpectations string
 	flag.StringVar(&initExpectations, "expectations", "[]", "set initial expectations")
 	flag.Parse()

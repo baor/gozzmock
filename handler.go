@@ -13,7 +13,7 @@ import (
 // HandlerAddExpectation handler parses request and adds expectation to global expectations list
 func HandlerAddExpectation(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		panic(fmt.Sprintf("HandlerAddExpectation. Wrong method %s", r.Method))
+		panic(fmt.Sprintf("Wrong method %s", r.Method))
 	}
 
 	exp := ExpectationFromReadCloser(r.Body)
@@ -30,7 +30,7 @@ func HandlerAddExpectation(w http.ResponseWriter, r *http.Request) {
 // HandlerRemoveExpectation handler parses request and deletes expectation from global expectations list
 func HandlerRemoveExpectation(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		panic(fmt.Sprintf("HandlerRemoveExpectation. Wrong method %s", r.Method))
+		panic(fmt.Sprintf("Wrong method %s", r.Method))
 	}
 
 	requestBody := ExpectationRemove{}
@@ -52,7 +52,7 @@ func HandlerRemoveExpectation(w http.ResponseWriter, r *http.Request) {
 // HandlerGetExpectations handler parses request and returns global expectations list
 func HandlerGetExpectations(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
-		panic(fmt.Sprintf("HandlerGetExpectations. Wrong method %s", r.Method))
+		panic(fmt.Sprintf("Wrong method %s", r.Method))
 	}
 
 	var exps = ControllerGetExpectations(nil)
@@ -75,7 +75,7 @@ func HandlerDefault(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprint(err), http.StatusInternalServerError)
 		return
 	}
-	log.Println("HandlerDefault. Request: " + string(req) + " ENDOFREQUEST")
+	log.Println("Request: " + string(req) + " ENDOFREQUEST")
 
 	generateResponseToResponseWriter(&w, ControllerTranslateRequestToExpectation(r))
 }
@@ -103,13 +103,13 @@ func generateResponseToResponseWriter(w *http.ResponseWriter, req ExpectationReq
 		time.Sleep(time.Second * exp.Delay)
 
 		if exp.Response != nil {
-			log.Println("generateResponseToResponseWriter. Apply response expectation")
+			log.Println("Apply response expectation")
 			uploadResponseToResponseWriter(w, exp.Response)
 			return
 		}
 
 		if exp.Forward != nil {
-			log.Println("generateResponseToResponseWriter. Apply forward expectation")
+			log.Println("Apply forward expectation")
 			httpReq := ControllerCreateHTTPRequest(req, exp.Forward)
 			doHTTPRequest(w, httpReq)
 			return
