@@ -96,39 +96,41 @@ func ControllerStringPassesFilter(str string, filter string) bool {
 
 // ControllerRequestPassesFilter validates whether the incoming request passes particular filter
 func ControllerRequestPassesFilter(req *ExpectationRequest, storedExpectation *ExpectationRequest) bool {
+	fLog := log.With().Str("function", "ControllerRequestPassesFilter").Logger()
+
 	if storedExpectation == nil {
-		log.Printf("Stored expectation.request is nil")
+		fLog.Debug().Msg("Stored expectation.request is nil")
 		return true
 	}
 
 	if len(storedExpectation.Method) > 0 && storedExpectation.Method != req.Method {
-		log.Printf("method %s should be %s", req.Method, storedExpectation.Method)
+		fLog.Info().Msgf("method %s should be %s", req.Method, storedExpectation.Method)
 		return false
 	}
 
 	if len(storedExpectation.Path) > 0 && !ControllerStringPassesFilter(req.Path, storedExpectation.Path) {
-		log.Printf("path %s doesn't pass filter %s", req.Path, storedExpectation.Path)
+		fLog.Info().Msgf("path %s doesn't pass filter %s", req.Path, storedExpectation.Path)
 		return false
 	}
 
 	if len(storedExpectation.Body) > 0 && !ControllerStringPassesFilter(req.Body, storedExpectation.Body) {
-		log.Printf("body %s doesn't pass filter %s", req.Body, storedExpectation.Body)
+		fLog.Info().Msgf("body %s doesn't pass filter %s", req.Body, storedExpectation.Body)
 		return false
 	}
 
 	if storedExpectation.Headers != nil {
 		if req.Headers == nil {
-			log.Printf("Request is expected to contain headers")
+			fLog.Info().Msgf("Request is expected to contain headers")
 			return false
 		}
 		for storedHeaderName, storedHeaderValue := range *storedExpectation.Headers {
 			value, ok := (*req.Headers)[storedHeaderName]
 			if !ok {
-				log.Printf("No header %s in the request headers %v", storedHeaderName, req.Headers)
+				fLog.Info().Msgf("No header %s in the request headers %v", storedHeaderName, req.Headers)
 				return false
 			}
 			if !ControllerStringPassesFilter(value, storedHeaderValue) {
-				log.Printf("header %s:%s has been rejected. Expected header value %s", storedHeaderName, value, storedHeaderValue)
+				fLog.Info().Msgf("header %s:%s has been rejected. Expected header value %s", storedHeaderName, value, storedHeaderValue)
 				return false
 			}
 		}
@@ -152,14 +154,18 @@ func ControllerSortExpectationsByPriority(exps Expectations) ExpectationsInt {
 
 // ControllerCreateHTTPRequest creates an http request based on incoming request and forward rules
 func ControllerCreateHTTPRequest(req ExpectationRequest, fwd *ExpectationForward) *http.Request {
+	fLog := log.With().Str("function", "ControllerCreateHTTPRequest").Logger()
+
 	fwdURL, err := url.Parse(fmt.Sprintf("%s://%s%s", fwd.Scheme, fwd.Host, req.Path))
 	if err != nil {
-		panic(err)
+		fLog.Panic().Err(err)
+		return nil
 	}
-	log.Printf("Send request to %s", fwdURL)
+	fLog.Info().Msgf("Send request to %s", fwdURL)
 	httpReq, err := http.NewRequest(req.Method, fwdURL.String(), bytes.NewBuffer([]byte(req.Body)))
 	if err != nil {
-		panic(err)
+		fLog.Panic().Err(err)
+		return nil
 	}
 
 	if req.Headers != nil {
