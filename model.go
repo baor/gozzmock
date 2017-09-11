@@ -5,6 +5,8 @@ import (
 	"io"
 	"strings"
 	"time"
+
+	"github.com/rs/zerolog/log"
 )
 
 // Headers are HTTP headers
@@ -59,12 +61,15 @@ func (exps ExpectationsInt) Less(i, j int) bool { return exps[i].Priority > exps
 
 // ExpectationFromReadCloser decodes readCloser to expectaion
 func ExpectationFromReadCloser(readCloser io.ReadCloser) Expectation {
+	fLog := log.With().Str("function", "ExpectationFromReadCloser").Logger()
+
 	exp := Expectation{}
 	bodyDecoder := json.NewDecoder(readCloser)
 	defer readCloser.Close()
 	err := bodyDecoder.Decode(&exp)
 	if err != nil {
-		panic(err)
+		fLog.Panic().Err(err)
+		return exp
 	}
 	expectationSetDefaultValues(&exp)
 	return exp
@@ -72,12 +77,15 @@ func ExpectationFromReadCloser(readCloser io.ReadCloser) Expectation {
 
 // ExpectationsFromString decodes string with array of expectations to array of expectaion objects
 func ExpectationsFromString(str string) []Expectation {
+	fLog := log.With().Str("function", "ExpectationsFromString").Logger()
+
 	exps := make([]Expectation, 0)
 
 	bodyDecoder := json.NewDecoder(strings.NewReader(str))
 	err := bodyDecoder.Decode(&exps)
 	if err != nil {
-		panic(err)
+		fLog.Panic().Err(err)
+		return exps
 	}
 	for _, exp := range exps {
 		expectationSetDefaultValues(&exp)
