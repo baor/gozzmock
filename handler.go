@@ -32,6 +32,7 @@ func HandlerRemoveExpectation(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		panic(fmt.Sprintf("Wrong method %s", r.Method))
 	}
+	defer r.Body.Close()
 
 	requestBody := ExpectationRemove{}
 	bodyDecoder := json.NewDecoder(r.Body)
@@ -39,7 +40,6 @@ func HandlerRemoveExpectation(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	defer r.Body.Close()
 
 	var exps = ControllerRemoveExpectation(requestBody.Key, nil)
 	expsjson, err := json.Marshal(exps)
@@ -132,10 +132,12 @@ func doHTTPRequest(w *http.ResponseWriter, httpReq *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(string(body))
+
+	log.Printf("Response body: %s", body)
 
 	(*w).WriteHeader(resp.StatusCode)
 	(*w).Write(body)
+
 	headers := *ControllerTranslateHTTPHeadersToExpHeaders(resp.Header)
 	for name, value := range headers {
 		(*w).Header().Set(name, value)
