@@ -165,7 +165,7 @@ func doHTTPRequest(w *http.ResponseWriter, httpReq *http.Request) {
 		return
 	}
 
-	fLog.Debug().Str("type", "ResponseBody").Msg(string(body))
+	fLog.Debug().Str("messagetype", "ResponseBody").Msg(string(body))
 
 	(*w).WriteHeader(resp.StatusCode)
 	(*w).Write(body)
