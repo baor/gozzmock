@@ -14,6 +14,12 @@
   version = "v1.0.0"
 
 [[projects]]
+  name = "github.com/rs/zerolog"
+  packages = [".","internal/json","log"]
+  revision = "3ac71fc58dbd43122668a912b755b0979ba9ce1f"
+  version = "v1.3.0"
+
+[[projects]]
   name = "github.com/stretchr/testify"
   packages = ["assert"]
   revision = "69483b4bd14f5845b5a1e55bca19e954e827f1d0"
@@ -22,6 +28,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "b750880cdc8ce044e6f9bf3b331d8a392471c328107b8c3d42e3e11022d76858"
+  inputs-digest = "f24f589c21e81e5f79e93256f07539da04a1008d16bc24d50e5bcd1e23f5165f"
   solver-name = "gps-cdcl"
   solver-version = 1

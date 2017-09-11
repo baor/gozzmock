@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"regexp"
 	"sort"
 	"strings"
 	"sync"
+
+	"github.com/rs/zerolog/log"
 )
 
 var expectations Expectations
@@ -155,7 +156,7 @@ func ControllerCreateHTTPRequest(req ExpectationRequest, fwd *ExpectationForward
 	if err != nil {
 		panic(err)
 	}
-	log.Println("Send request to " + fwdURL.String())
+	log.Printf("Send request to %s", fwdURL)
 	httpReq, err := http.NewRequest(req.Method, fwdURL.String(), bytes.NewBuffer([]byte(req.Body)))
 	if err != nil {
 		panic(err)

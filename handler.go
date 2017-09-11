@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/http/httputil"
 	"time"
+
+	"github.com/rs/zerolog/log"
 )
 
 // HandlerAddExpectation handler parses request and adds expectation to global expectations list
@@ -75,7 +76,7 @@ func HandlerDefault(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprint(err), http.StatusInternalServerError)
 		return
 	}
-	log.Println("Request: " + string(req) + " ENDOFREQUEST")
+	log.Print("Request: " + string(req))
 
 	generateResponseToResponseWriter(&w, ControllerTranslateRequestToExpectation(r))
 }
@@ -103,13 +104,13 @@ func generateResponseToResponseWriter(w *http.ResponseWriter, req ExpectationReq
 		time.Sleep(time.Second * exp.Delay)
 
 		if exp.Response != nil {
-			log.Println("Apply response expectation")
+			log.Print("Apply response expectation")
 			uploadResponseToResponseWriter(w, exp.Response)
 			return
 		}
 
 		if exp.Forward != nil {
-			log.Println("Apply forward expectation")
+			log.Print("Apply forward expectation")
 			httpReq := ControllerCreateHTTPRequest(req, exp.Forward)
 			doHTTPRequest(w, httpReq)
 			return

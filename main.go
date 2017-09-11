@@ -3,9 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
+
 	"net/http"
 	"net/http/httputil"
+
+	"github.com/rs/zerolog/log"
 )
 
 func httpHandleFuncWithLogs(pattern string, handler func(http.ResponseWriter, *http.Request)) {
@@ -15,7 +17,7 @@ func httpHandleFuncWithLogs(pattern string, handler func(http.ResponseWriter, *h
 			http.Error(w, fmt.Sprint(err), http.StatusInternalServerError)
 			return
 		}
-		log.Printf("%+v\n", req)
+		log.Print(req)
 
 		handler(w, r)
 	}
@@ -24,10 +26,6 @@ func httpHandleFuncWithLogs(pattern string, handler func(http.ResponseWriter, *h
 }
 
 func main() {
-
-	//log file name and line
-	log.SetFlags(log.LstdFlags | log.Lshortfile)
-
 	var initExpectations string
 	flag.StringVar(&initExpectations, "expectations", "[]", "set initial expectations")
 	flag.Parse()

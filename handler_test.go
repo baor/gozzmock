@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -65,7 +64,6 @@ func TestHandlerAddAndRemoveExpectation(t *testing.T) {
 
 	// remove expectation
 	expRemoveJSON, err := json.Marshal(ExpectationRemove{Key: expectedExp.Key})
-	log.Println(string(expRemoveJSON))
 	if err != nil {
 		panic(err)
 	}
