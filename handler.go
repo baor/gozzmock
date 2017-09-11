@@ -122,6 +122,10 @@ func generateResponseToResponseWriter(w *http.ResponseWriter, req ExpectationReq
 
 func doHTTPRequest(w *http.ResponseWriter, httpReq *http.Request) {
 	httpClient := &http.Client{}
+
+	// disable gzip compression
+	httpReq.Header.Set("Accept-Encoding", "deflate")
+
 	resp, err := httpClient.Do(httpReq)
 	if err != nil {
 		panic(err)
