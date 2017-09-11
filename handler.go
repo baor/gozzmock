@@ -91,7 +91,7 @@ func HandlerDefault(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprint(err), http.StatusInternalServerError)
 		return
 	}
-	fLog.Debug().Str("type", "IncomingRequest").Msg(string(req))
+	fLog.Debug().Str("messagetype", "IncomingRequest").Msg(string(req))
 
 	generateResponseToResponseWriter(&w, ControllerTranslateRequestToExpectation(r))
 }

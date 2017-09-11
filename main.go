@@ -48,6 +48,9 @@ func setZeroLogLevel(logLevel string) {
 	}
 	fmt.Println("set log level:", selectedLevel)
 	zerolog.SetGlobalLevel(selectedLevel)
+	zerolog.TimestampFieldName = "timestamp"
+	log.Logger = log.With().Str("type", "gozzmock").Logger()
+
 }
 
 func main() {
