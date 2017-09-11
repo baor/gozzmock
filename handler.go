@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/http/httputil"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -84,15 +83,6 @@ func HandlerStatus(w http.ResponseWriter, r *http.Request) {
 
 // HandlerDefault handler is an entry point for all incoming requests
 func HandlerDefault(w http.ResponseWriter, r *http.Request) {
-	fLog := log.With().Str("function", "HandlerDefault").Logger()
-
-	req, err := httputil.DumpRequest(r, true)
-	if err != nil {
-		http.Error(w, fmt.Sprint(err), http.StatusInternalServerError)
-		return
-	}
-	fLog.Debug().Str("messagetype", "IncomingRequest").Msg(string(req))
-
 	generateResponseToResponseWriter(&w, ControllerTranslateRequestToExpectation(r))
 }
 
