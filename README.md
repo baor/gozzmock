@@ -1,4 +1,4 @@
-## gozzmock
+# gozzmock
 Mock server in go!
 
 Inspired by http://www.mock-server.com/
@@ -98,7 +98,7 @@ response from gozzmock
 ```
 
 
-## Specification
+# Specification
 This part describes structure of expectations
 
 # Root level 
