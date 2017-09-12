@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 	"testing"
@@ -70,7 +71,7 @@ func TestControllerRemoveWrongKeyExpectations_OneExpectations_NotReturnError(t *
 }
 
 func TestControllerTranslateRequestToExpectation_SimpleRequest_AllFieldsTranslated(t *testing.T) {
-	request, err := http.NewRequest("POST", "https://www.host.com/path", strings.NewReader("body text"))
+	request, err := http.NewRequest("POST", "https://www.host.com/a/b?foo=bar#fr", strings.NewReader("body text"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -80,10 +81,11 @@ func TestControllerTranslateRequestToExpectation_SimpleRequest_AllFieldsTranslat
 
 	assert.NotNil(t, exp)
 	assert.Equal(t, "POST", exp.Method)
-	assert.Equal(t, "/path", exp.Path)
+	assert.Equal(t, "/a/b?foo=bar#fr", exp.Path)
 	assert.Equal(t, "body text", exp.Body)
-	assert.Equal(t, 1, len(exp.Headers))
-	assert.Equal(t, "hv1", exp.Headers["h1"])
+	assert.NotNil(t, exp.Headers)
+	assert.Equal(t, 1, len(*exp.Headers))
+	assert.Equal(t, "hv1", (*exp.Headers)["H1"])
 }
 
 func TestControllerTranslateHTTPHeadersToExpHeaders_TwoHeaders_HeadersTranslated(t *testing.T) {
@@ -92,9 +94,9 @@ func TestControllerTranslateHTTPHeadersToExpHeaders_TwoHeaders_HeadersTranslated
 	header.Add("h1", "hv2")
 
 	expHeaders := ControllerTranslateHTTPHeadersToExpHeaders(header)
-
-	assert.Equal(t, 1, len(expHeaders))
-	assert.Equal(t, "hv1,hv2", expHeaders["h1"])
+	assert.NotNil(t, expHeaders)
+	assert.Equal(t, 1, len(*expHeaders))
+	assert.Equal(t, "hv1,hv2", (*expHeaders)["H1"])
 }
 
 func TestControllerStringPassesFilter_EmptyFilter_True(t *testing.T) {
@@ -117,63 +119,67 @@ func TestControllerStringPassesFilter_NotExistingRegex_False(t *testing.T) {
 	assert.False(t, ControllerStringPassesFilter("abc", ".z."))
 }
 
+func TestControllerStringPassesFilter_MultilineBody_True(t *testing.T) {
+	assert.True(t, ControllerStringPassesFilter("a\nb", "a.b"))
+}
+
 func TestControllerRequestPassFilter_EmptyRequestEmptyFilter_True(t *testing.T) {
-	assert.True(t, ControllerRequestPassFilter(
+	assert.True(t, ControllerRequestPassesFilter(
 		&ExpectationRequest{},
 		&ExpectationRequest{}))
 }
 
 func TestControllerRequestPassFilter_MethodsAreEq_True(t *testing.T) {
-	assert.True(t, ControllerRequestPassFilter(
+	assert.True(t, ControllerRequestPassesFilter(
 		&ExpectationRequest{Method: "POST"},
 		&ExpectationRequest{Method: "POST"}))
 }
 
 func TestControllerRequestPassFilter_PathsAreEq_True(t *testing.T) {
-	assert.True(t, ControllerRequestPassFilter(
+	assert.True(t, ControllerRequestPassesFilter(
 		&ExpectationRequest{Path: "/path"},
 		&ExpectationRequest{Path: "/path"}))
 }
 
 func TestControllerRequestPassFilter_MethodsNotEqAndPathsAreEq_False(t *testing.T) {
-	assert.False(t, ControllerRequestPassFilter(
+	assert.False(t, ControllerRequestPassesFilter(
 		&ExpectationRequest{Method: "GET", Path: "/path"},
 		&ExpectationRequest{Method: "POST", Path: "/path"}))
 }
 
 func TestControllerRequestPassFilter_HeadersAreEq_True(t *testing.T) {
-	assert.True(t, ControllerRequestPassFilter(
-		&ExpectationRequest{Headers: Headers{"h1": "hv1"}},
-		&ExpectationRequest{Headers: Headers{"h1": "hv1"}}))
+	assert.True(t, ControllerRequestPassesFilter(
+		&ExpectationRequest{Headers: &Headers{"h1": "hv1"}},
+		&ExpectationRequest{Headers: &Headers{"h1": "hv1"}}))
 }
 
 func TestControllerRequestPassFilter_HeaderNotEq_False(t *testing.T) {
-	result := ControllerRequestPassFilter(
-		&ExpectationRequest{Headers: Headers{"h1": "hv1"}},
-		&ExpectationRequest{Headers: Headers{"h2": "hv2"}})
+	result := ControllerRequestPassesFilter(
+		&ExpectationRequest{Headers: &Headers{"h1": "hv1"}},
+		&ExpectationRequest{Headers: &Headers{"h2": "hv2"}})
 	assert.False(t, result)
 }
 
 func TestControllerRequestPassFilter_HeaderValueNotEq_False(t *testing.T) {
-	assert.False(t, ControllerRequestPassFilter(
-		&ExpectationRequest{Headers: Headers{"h1": "hv1"}},
-		&ExpectationRequest{Headers: Headers{"h1": "hv2"}}))
+	assert.False(t, ControllerRequestPassesFilter(
+		&ExpectationRequest{Headers: &Headers{"h1": "hv1"}},
+		&ExpectationRequest{Headers: &Headers{"h1": "hv2"}}))
 }
 
 func TestControllerRequestPassFilter_NoHeaderinReq_False(t *testing.T) {
-	assert.False(t, ControllerRequestPassFilter(
+	assert.False(t, ControllerRequestPassesFilter(
 		&ExpectationRequest{},
-		&ExpectationRequest{Headers: Headers{"h2": "hv2"}}))
+		&ExpectationRequest{Headers: &Headers{"h2": "hv2"}}))
 }
 
 func TestControllerRequestPassFilter_NoHeaderInFilter_True(t *testing.T) {
-	assert.True(t, ControllerRequestPassFilter(
-		&ExpectationRequest{Headers: Headers{"h1": "hv1"}},
+	assert.True(t, ControllerRequestPassesFilter(
+		&ExpectationRequest{Headers: &Headers{"h1": "hv1"}},
 		&ExpectationRequest{}))
 }
 
 func TestControllerRequestPassFilter_BodysEq_True(t *testing.T) {
-	assert.True(t, ControllerRequestPassFilter(
+	assert.True(t, ControllerRequestPassesFilter(
 		&ExpectationRequest{Body: "body"},
 		&ExpectationRequest{Body: "body"}))
 }
@@ -195,4 +201,16 @@ func TestControllerSortExpectationsByPriority_ListOfExpectations_OK(t *testing.T
 	assert.Equal(t, "k2", sortedMap[0].Key)
 	assert.Equal(t, "k1", sortedMap[1].Key)
 	assert.Equal(t, "k0", sortedMap[2].Key)
+}
+
+func TestControllerControllerCreateHTTPRequestWithHeaders(t *testing.T) {
+	expReq := &ExpectationRequest{Method: "GET", Path: "/request", Headers: &Headers{"h_req": "hv_req"}}
+	expFwd := &ExpectationForward{Scheme: "https", Host: "localhost_fwd", Headers: &Headers{"h_req": "hv_fwd", "h_fwd": "hv_fwd"}}
+	httpReq := ControllerCreateHTTPRequest(expReq, expFwd)
+	assert.NotNil(t, httpReq)
+	assert.Equal(t, expReq.Method, httpReq.Method)
+	assert.Equal(t, expFwd.Host, httpReq.Host)
+	assert.Equal(t, fmt.Sprintf("%s://%s%s", expFwd.Scheme, expFwd.Host, expReq.Path), httpReq.URL.String())
+	assert.Equal(t, "hv_fwd", httpReq.Header.Get("h_req"))
+	assert.Equal(t, "hv_fwd", httpReq.Header.Get("h_fwd"))
 }

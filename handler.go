@@ -1,140 +1,197 @@
 package main
 
 import (
+	"compress/gzip"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
+	"net/http/httputil"
 	"time"
+
+	"github.com/rs/zerolog/log"
 )
 
 // HandlerAddExpectation handler parses request and adds expectation to global expectations list
 func HandlerAddExpectation(w http.ResponseWriter, r *http.Request) {
-	log.Println(r)
-	if r.Method != "POST" {
-		panic(fmt.Sprintf("Wrong method %s", r.Method))
-	}
-	log.Println("Body = " + fmt.Sprint(r.Body))
+	fLog := log.With().Str("function", "HandlerAddExpectation").Logger()
 
-	exp := Expectation{}
-	bodyDecoder := json.NewDecoder(r.Body)
-	err := bodyDecoder.Decode(&exp)
-	if err != nil {
-		panic(err)
+	if r.Method != "POST" {
+		fLog.Panic().Msgf("Wrong method %s", r.Method)
+		return
 	}
-	defer r.Body.Close()
+
+	exp := ExpectationFromReadCloser(r.Body)
 
 	var exps = ControllerAddExpectation(exp.Key, exp, nil)
 
 	expsjson, err := json.Marshal(exps)
 	if err != nil {
-		panic(err)
+		fLog.Panic().Err(err)
+		return
 	}
 	w.Write(expsjson)
 }
 
 // HandlerRemoveExpectation handler parses request and deletes expectation from global expectations list
 func HandlerRemoveExpectation(w http.ResponseWriter, r *http.Request) {
-	log.Println(r)
+	fLog := log.With().Str("function", "HandlerRemoveExpectation").Logger()
+
 	if r.Method != "POST" {
-		panic(fmt.Sprintf("Wrong method %s", r.Method))
+		fLog.Panic().Msgf("Wrong method %s", r.Method)
+		return
 	}
-	log.Println("Body = " + fmt.Sprint(r.Body))
+	defer r.Body.Close()
 
 	requestBody := ExpectationRemove{}
 	bodyDecoder := json.NewDecoder(r.Body)
 	err := bodyDecoder.Decode(&requestBody)
 	if err != nil {
-		panic(err)
+		fLog.Panic().Err(err)
+		return
 	}
-	defer r.Body.Close()
 
 	var exps = ControllerRemoveExpectation(requestBody.Key, nil)
 	expsjson, err := json.Marshal(exps)
 	if err != nil {
-		panic(err)
+		fLog.Panic().Err(err)
+		return
 	}
 	w.Write(expsjson)
 }
 
 // HandlerGetExpectations handler parses request and returns global expectations list
 func HandlerGetExpectations(w http.ResponseWriter, r *http.Request) {
-	log.Println(r)
+	fLog := log.With().Str("function", "HandlerGetExpectations").Logger()
+
 	if r.Method != "GET" {
-		panic(fmt.Sprintf("Wrong method %s", r.Method))
+		fLog.Panic().Msgf("Wrong method %s", r.Method)
+		return
 	}
 
 	var exps = ControllerGetExpectations(nil)
 	expsjson, err := json.Marshal(exps)
 	if err != nil {
-		panic(err)
+		fLog.Panic().Err(err)
+		return
 	}
 	fmt.Fprint(w, string(expsjson))
 }
 
 // HandlerStatus handler returns applications status
 func HandlerStatus(w http.ResponseWriter, r *http.Request) {
-	log.Println(r)
 	fmt.Fprint(w, "gozzmock status is OK")
 }
 
 // HandlerDefault handler is an entry point for all incoming requests
 func HandlerDefault(w http.ResponseWriter, r *http.Request) {
-	log.Println(r)
-
-	generateResponseToResponseWriter(&w, ControllerTranslateRequestToExpectation(r))
+	generateResponseToResponseWriter(w, ControllerTranslateRequestToExpectation(r))
 }
 
-func uploadResponseToResponseWriter(w *http.ResponseWriter, resp *ExpectationResponse) {
-	(*w).WriteHeader(resp.HTTPCode)
-	(*w).Write([]byte(resp.Body))
-	for name, value := range resp.Headers {
-		(*w).Header().Set(name, value)
-	}
-}
-
-func generateResponseToResponseWriter(w *http.ResponseWriter, req ExpectationRequest) {
-	exps := ControllerGetExpectations(nil)
-	for _, exp := range ControllerSortExpectationsByPriority(exps) {
-		if ControllerRequestPassFilter(&req, &exp.Request) {
-			expResponseIsEmpty := (exp.Response.HTTPCode == 0 && exp.Response.Body == "")
-			if !expResponseIsEmpty {
-				uploadResponseToResponseWriter(w, &exp.Response)
-				time.Sleep(time.Second * exp.Delay)
-				return
-			}
-			expForwardIsEmpty := (exp.Forward.Scheme == "" && exp.Forward.Host == "")
-			if !expForwardIsEmpty {
-				httpReq := ControllerCreateHTTPRequest(req, exp.Forward)
-				doHTTPRequest(w, httpReq)
-				time.Sleep(time.Second * exp.Delay)
-				return
-			}
+func uploadResponseToResponseWriter(w http.ResponseWriter, resp *ExpectationResponse) {
+	w.WriteHeader(resp.HTTPCode)
+	w.Write([]byte(resp.Body))
+	if resp.Headers != nil {
+		for name, value := range *resp.Headers {
+			w.Header().Set(name, value)
 		}
 	}
-	(*w).WriteHeader(http.StatusNotImplemented)
-	(*w).Write([]byte("No expectations in gozzmock for request!"))
 }
 
-func doHTTPRequest(w *http.ResponseWriter, httpReq *http.Request) {
+func generateResponseToResponseWriter(w http.ResponseWriter, req *ExpectationRequest) {
+	fLog := log.With().Str("function", "generateResponseToResponseWriter").Logger()
+
+	storedExpectations := ControllerGetExpectations(nil)
+	orderedStoredExpectations := ControllerSortExpectationsByPriority(storedExpectations)
+	for i := 0; i < len(orderedStoredExpectations); i++ {
+		exp := orderedStoredExpectations[i]
+
+		if !ControllerRequestPassesFilter(req, exp.Request) {
+			continue
+		}
+
+		time.Sleep(time.Second * exp.Delay)
+
+		if exp.Response != nil {
+			fLog.Info().Str("key", exp.Key).Msg("Apply response expectation")
+			uploadResponseToResponseWriter(w, exp.Response)
+			return
+		}
+
+		if exp.Forward != nil {
+			fLog.Info().Str("key", exp.Key).Msg("Apply forward expectation")
+			httpReq := ControllerCreateHTTPRequest(req, exp.Forward)
+			doHTTPRequest(w, httpReq)
+			return
+		}
+	}
+	fLog.Error().Msg("No expectations in gozzmock for request!")
+
+	w.WriteHeader(http.StatusNotImplemented)
+	w.Write([]byte("No expectations in gozzmock for request!"))
+}
+
+func readResponseBody(resp *http.Response) ([]byte, error) {
+	var reader io.ReadCloser
+	if resp.Header.Get("Content-Encoding") == "gzip" {
+		reader, err := gzip.NewReader(resp.Body)
+		defer reader.Close()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		reader = resp.Body
+	}
+
+	body, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return nil, err
+	}
+
+	return body, nil
+}
+
+// LogRequest dumps http request and writes content to log
+func LogRequest(req *http.Request) {
+	fLog := log.With().Str("function", "LogRequest").Logger()
+	reqDumped, err := httputil.DumpRequest(req, true)
+	if err != nil {
+		fLog.Panic().Err(err)
+		return
+	}
+	fLog.Debug().Str("messagetype", "Request").Msg(string(reqDumped))
+}
+
+func doHTTPRequest(w http.ResponseWriter, httpReq *http.Request) {
+	fLog := log.With().Str("function", "doHTTPRequest").Logger()
+
+	if httpReq == nil {
+		fLog.Panic().Msg("http.Request is nil")
+		return
+	}
+
 	httpClient := &http.Client{}
+
 	resp, err := httpClient.Do(httpReq)
 	if err != nil {
-		panic(err)
+		fLog.Panic().Err(err)
+		return
 	}
-	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := readResponseBody(resp)
 	if err != nil {
-		panic(err)
+		fLog.Panic().Err(err)
+		return
 	}
-	fmt.Println(string(body))
 
-	(*w).WriteHeader(resp.StatusCode)
-	(*w).Write(body)
-	headers := ControllerTranslateHTTPHeadersToExpHeaders(resp.Header)
+	fLog.Debug().Str("messagetype", "ResponseBody").Msg(string(body))
+
+	w.WriteHeader(resp.StatusCode)
+	w.Write(body)
+
+	headers := *ControllerTranslateHTTPHeadersToExpHeaders(resp.Header)
 	for name, value := range headers {
-		(*w).Header().Set(name, value)
+		w.Header().Set(name, value)
 	}
 }
