@@ -119,6 +119,10 @@ func TestControllerStringPassesFilter_NotExistingRegex_False(t *testing.T) {
 	assert.False(t, ControllerStringPassesFilter("abc", ".z."))
 }
 
+func TestControllerStringPassesFilter_MultilineBody_True(t *testing.T) {
+	assert.True(t, ControllerStringPassesFilter("a\nb", "a.b"))
+}
+
 func TestControllerRequestPassFilter_EmptyRequestEmptyFilter_True(t *testing.T) {
 	assert.True(t, ControllerRequestPassesFilter(
 		&ExpectationRequest{},

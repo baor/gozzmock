@@ -87,7 +87,7 @@ func ControllerTranslateRequestToExpectation(r *http.Request) ExpectationRequest
 
 // ControllerStringPassesFilter validates whether the input string has filter string as substring or as a regex
 func ControllerStringPassesFilter(str string, filter string) bool {
-	r, error := regexp.Compile(filter)
+	r, error := regexp.Compile("(?s)" + filter)
 	if error != nil {
 		return strings.Contains(str, filter)
 	}
