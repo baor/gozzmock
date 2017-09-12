@@ -1,8 +1,10 @@
 package main
 
 import (
+	"compress/gzip"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
@@ -130,15 +132,24 @@ func generateResponseToResponseWriter(w *http.ResponseWriter, req ExpectationReq
 	(*w).Write([]byte("No expectations in gozzmock for request!"))
 }
 
-// LogResponse dumps http response and writes content to log
-func LogResponse(resp *http.Response) {
-	fLog := log.With().Str("function", "LogResponse").Logger()
-	respDumped, err := httputil.DumpResponse(resp, true)
-	if err != nil {
-		fLog.Panic().Err(err)
-		return
+func readResponseBody(resp *http.Response) ([]byte, error) {
+	var reader io.ReadCloser
+	if resp.Header.Get("Content-Encoding") == "gzip" {
+		reader, err := gzip.NewReader(resp.Body)
+		defer reader.Close()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		reader = resp.Body
 	}
-	fLog.Debug().Str("messagetype", "Response").Msg(string(respDumped))
+
+	body, err := ioutil.ReadAll(reader)
+	if err != nil {
+		return nil, err
+	}
+
+	return body, nil
 }
 
 // LogRequest dumps http request and writes content to log
@@ -162,23 +173,19 @@ func doHTTPRequest(w *http.ResponseWriter, httpReq *http.Request) {
 
 	httpClient := &http.Client{}
 
-	// disable gzip compression
-	httpReq.Header.Set("Accept-Encoding", "deflate")
-
 	resp, err := httpClient.Do(httpReq)
 	if err != nil {
 		fLog.Panic().Err(err)
 		return
 	}
-	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := readResponseBody(resp)
 	if err != nil {
 		fLog.Panic().Err(err)
 		return
 	}
 
-	LogResponse(resp)
+	fLog.Debug().Str("messagetype", "ResponseBody").Msg(string(body))
 
 	(*w).WriteHeader(resp.StatusCode)
 	(*w).Write(body)
