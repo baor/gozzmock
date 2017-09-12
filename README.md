@@ -45,6 +45,7 @@ Expectation should be sent to /gozzmock/add_expectation endpoint like this
 ```bash
 curl -d '{"forward":{"host":"api.github.com","scheme":"https"},"key":"forwardExpectation"}' -X POST http://192.168.99.100:8080/gozzmock/add_expectation
 ```
+*NOTE* 192.168.99.100 - ip of host machine
 
 To validate that expectation works
 ```bash
@@ -78,6 +79,7 @@ Add expectation with response:
     },
     "priority": 1
 }
+```
 
 ```bash
 curl -d '{"key":"responseExpectation","request":{"method":"GET","path":"mocked"},"response":{"body":"response from gozzmock","headers":[{"Content-Type":"text/plain; charset=utf-8"}],"httpcode":200},"priority":1}'-X POST http://192.168.99.100:8080/gozzmock/add_expectation
