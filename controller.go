@@ -65,7 +65,7 @@ func ControllerTranslateHTTPHeadersToExpHeaders(httpHeader http.Header) *Headers
 }
 
 // ControllerTranslateRequestToExpectation Translates http request to expectation request
-func ControllerTranslateRequestToExpectation(r *http.Request) ExpectationRequest {
+func ControllerTranslateRequestToExpectation(r *http.Request) *ExpectationRequest {
 	var expRequest = ExpectationRequest{}
 	expRequest.Method = r.Method
 	expRequest.Path = r.URL.Path
@@ -82,7 +82,7 @@ func ControllerTranslateRequestToExpectation(r *http.Request) ExpectationRequest
 		expRequest.Headers = ControllerTranslateHTTPHeadersToExpHeaders(r.Header)
 	}
 
-	return expRequest
+	return &expRequest
 }
 
 // ControllerStringPassesFilter validates whether the input string has filter string as substring or as a regex
@@ -153,7 +153,7 @@ func ControllerSortExpectationsByPriority(exps Expectations) ExpectationsInt {
 }
 
 // ControllerCreateHTTPRequest creates an http request based on incoming request and forward rules
-func ControllerCreateHTTPRequest(req ExpectationRequest, fwd *ExpectationForward) *http.Request {
+func ControllerCreateHTTPRequest(req *ExpectationRequest, fwd *ExpectationForward) *http.Request {
 	fLog := log.With().Str("function", "ControllerCreateHTTPRequest").Logger()
 
 	fwdURL, err := url.Parse(fmt.Sprintf("%s://%s%s", fwd.Scheme, fwd.Host, req.Path))

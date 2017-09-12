@@ -86,20 +86,20 @@ func HandlerStatus(w http.ResponseWriter, r *http.Request) {
 
 // HandlerDefault handler is an entry point for all incoming requests
 func HandlerDefault(w http.ResponseWriter, r *http.Request) {
-	generateResponseToResponseWriter(&w, ControllerTranslateRequestToExpectation(r))
+	generateResponseToResponseWriter(w, ControllerTranslateRequestToExpectation(r))
 }
 
-func uploadResponseToResponseWriter(w *http.ResponseWriter, resp *ExpectationResponse) {
-	(*w).WriteHeader(resp.HTTPCode)
-	(*w).Write([]byte(resp.Body))
+func uploadResponseToResponseWriter(w http.ResponseWriter, resp *ExpectationResponse) {
+	w.WriteHeader(resp.HTTPCode)
+	w.Write([]byte(resp.Body))
 	if resp.Headers != nil {
 		for name, value := range *resp.Headers {
-			(*w).Header().Set(name, value)
+			w.Header().Set(name, value)
 		}
 	}
 }
 
-func generateResponseToResponseWriter(w *http.ResponseWriter, req ExpectationRequest) {
+func generateResponseToResponseWriter(w http.ResponseWriter, req *ExpectationRequest) {
 	fLog := log.With().Str("function", "generateResponseToResponseWriter").Logger()
 
 	storedExpectations := ControllerGetExpectations(nil)
@@ -107,7 +107,7 @@ func generateResponseToResponseWriter(w *http.ResponseWriter, req ExpectationReq
 	for i := 0; i < len(orderedStoredExpectations); i++ {
 		exp := orderedStoredExpectations[i]
 
-		if !ControllerRequestPassesFilter(&req, exp.Request) {
+		if !ControllerRequestPassesFilter(req, exp.Request) {
 			continue
 		}
 
@@ -128,8 +128,8 @@ func generateResponseToResponseWriter(w *http.ResponseWriter, req ExpectationReq
 	}
 	fLog.Error().Msg("No expectations in gozzmock for request!")
 
-	(*w).WriteHeader(http.StatusNotImplemented)
-	(*w).Write([]byte("No expectations in gozzmock for request!"))
+	w.WriteHeader(http.StatusNotImplemented)
+	w.Write([]byte("No expectations in gozzmock for request!"))
 }
 
 func readResponseBody(resp *http.Response) ([]byte, error) {
@@ -163,7 +163,7 @@ func LogRequest(req *http.Request) {
 	fLog.Debug().Str("messagetype", "Request").Msg(string(reqDumped))
 }
 
-func doHTTPRequest(w *http.ResponseWriter, httpReq *http.Request) {
+func doHTTPRequest(w http.ResponseWriter, httpReq *http.Request) {
 	fLog := log.With().Str("function", "doHTTPRequest").Logger()
 
 	if httpReq == nil {
@@ -187,11 +187,11 @@ func doHTTPRequest(w *http.ResponseWriter, httpReq *http.Request) {
 
 	fLog.Debug().Str("messagetype", "ResponseBody").Msg(string(body))
 
-	(*w).WriteHeader(resp.StatusCode)
-	(*w).Write(body)
+	w.WriteHeader(resp.StatusCode)
+	w.Write(body)
 
 	headers := *ControllerTranslateHTTPHeadersToExpHeaders(resp.Header)
 	for name, value := range headers {
-		(*w).Header().Set(name, value)
+		w.Header().Set(name, value)
 	}
 }

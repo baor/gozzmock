@@ -204,9 +204,9 @@ func TestControllerSortExpectationsByPriority_ListOfExpectations_OK(t *testing.T
 }
 
 func TestControllerControllerCreateHTTPRequestWithHeaders(t *testing.T) {
-	expReq := ExpectationRequest{Method: "GET", Path: "/request", Headers: &Headers{"h_req": "hv_req"}}
-	expFwd := ExpectationForward{Scheme: "https", Host: "localhost_fwd", Headers: &Headers{"h_req": "hv_fwd", "h_fwd": "hv_fwd"}}
-	httpReq := ControllerCreateHTTPRequest(expReq, &expFwd)
+	expReq := &ExpectationRequest{Method: "GET", Path: "/request", Headers: &Headers{"h_req": "hv_req"}}
+	expFwd := &ExpectationForward{Scheme: "https", Host: "localhost_fwd", Headers: &Headers{"h_req": "hv_fwd", "h_fwd": "hv_fwd"}}
+	httpReq := ControllerCreateHTTPRequest(expReq, expFwd)
 	assert.NotNil(t, httpReq)
 	assert.Equal(t, expReq.Method, httpReq.Method)
 	assert.Equal(t, expFwd.Host, httpReq.Host)
