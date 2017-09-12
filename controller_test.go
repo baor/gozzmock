@@ -71,7 +71,7 @@ func TestControllerRemoveWrongKeyExpectations_OneExpectations_NotReturnError(t *
 }
 
 func TestControllerTranslateRequestToExpectation_SimpleRequest_AllFieldsTranslated(t *testing.T) {
-	request, err := http.NewRequest("POST", "https://www.host.com/path", strings.NewReader("body text"))
+	request, err := http.NewRequest("POST", "https://www.host.com/a/b?foo=bar#fr", strings.NewReader("body text"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -81,7 +81,7 @@ func TestControllerTranslateRequestToExpectation_SimpleRequest_AllFieldsTranslat
 
 	assert.NotNil(t, exp)
 	assert.Equal(t, "POST", exp.Method)
-	assert.Equal(t, "/path", exp.Path)
+	assert.Equal(t, "/a/b?foo=bar#fr", exp.Path)
 	assert.Equal(t, "body text", exp.Body)
 	assert.NotNil(t, exp.Headers)
 	assert.Equal(t, 1, len(*exp.Headers))

@@ -68,7 +68,11 @@ func ControllerTranslateHTTPHeadersToExpHeaders(httpHeader http.Header) *Headers
 func ControllerTranslateRequestToExpectation(r *http.Request) *ExpectationRequest {
 	var expRequest = ExpectationRequest{}
 	expRequest.Method = r.Method
-	expRequest.Path = r.URL.Path
+	expRequest.Path = r.URL.RequestURI()
+
+	if len(r.URL.Fragment) > 0 {
+		expRequest.Path += "#" + r.URL.Fragment
+	}
 
 	// Buffer the body
 	if r.Body != nil {
