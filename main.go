@@ -5,23 +5,14 @@ import (
 	"fmt"
 
 	"net/http"
-	"net/http/httputil"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
 func httpHandleFuncWithLogs(pattern string, handler func(http.ResponseWriter, *http.Request)) {
-	fLog := log.With().Str("function", "httpHandleFuncWithLogs").Logger()
-
 	wrappedHandler := func(w http.ResponseWriter, r *http.Request) {
-		req, err := httputil.DumpRequest(r, true)
-		if err != nil {
-			http.Error(w, fmt.Sprint(err), http.StatusInternalServerError)
-			return
-		}
-		fLog.Debug().Msg(string(req))
-
+		LogRequest(r)
 		handler(w, r)
 	}
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/httputil"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -129,6 +130,28 @@ func generateResponseToResponseWriter(w *http.ResponseWriter, req ExpectationReq
 	(*w).Write([]byte("No expectations in gozzmock for request!"))
 }
 
+// LogResponse dumps http response and writes content to log
+func LogResponse(resp *http.Response) {
+	fLog := log.With().Str("function", "LogResponse").Logger()
+	respDumped, err := httputil.DumpResponse(resp, true)
+	if err != nil {
+		fLog.Panic().Err(err)
+		return
+	}
+	fLog.Debug().Str("messagetype", "Response").Msg(string(respDumped))
+}
+
+// LogRequest dumps http request and writes content to log
+func LogRequest(req *http.Request) {
+	fLog := log.With().Str("function", "LogRequest").Logger()
+	reqDumped, err := httputil.DumpRequest(req, true)
+	if err != nil {
+		fLog.Panic().Err(err)
+		return
+	}
+	fLog.Debug().Str("messagetype", "Request").Msg(string(reqDumped))
+}
+
 func doHTTPRequest(w *http.ResponseWriter, httpReq *http.Request) {
 	fLog := log.With().Str("function", "doHTTPRequest").Logger()
 
@@ -155,7 +178,7 @@ func doHTTPRequest(w *http.ResponseWriter, httpReq *http.Request) {
 		return
 	}
 
-	fLog.Debug().Str("messagetype", "ResponseBody").Msg(string(body))
+	LogResponse(resp)
 
 	(*w).WriteHeader(resp.StatusCode)
 	(*w).Write(body)
